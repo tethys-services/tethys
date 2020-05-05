@@ -1,0 +1,99 @@
+# Copyright 2020 Konstruktor, Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: '3'
+
+services:
+
+  worker_1:
+    build:
+      context: ../../
+      dockerfile: ./scripts/docker/Dockerfile
+      args:
+          TETHYS_EXTRAS: rabbit,mongo
+    volumes:
+      - .:/home/tethys/
+    environment:
+      - PYTHONPATH=/home/tethys/:${PYTHONPATH}
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - TRANSPORT_URI=amqp://rabbitmq/
+    command: apps Worker start -s "worker_1" -c "/home/tethys/l2_configs.py" -v
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  worker_2:
+    build:
+      context: ../../
+      dockerfile: ./scripts/docker/Dockerfile
+      args:
+          TETHYS_EXTRAS: rabbit,mongo
+    working_dir: /home/tethys/
+    volumes:
+      - .:/home/tethys/
+    environment:
+      - PYTHONPATH=/home/tethys/:${PYTHONPATH}
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - TRANSPORT_URI=amqp://rabbitmq/
+    command: apps Worker start -s "worker_2" -c "/home/tethys/l2_configs.py" -v
+    depends_on:
+      - worker_1
+
+  worker_3:
+    build:
+      context: ../../
+      dockerfile: ./scripts/docker/Dockerfile
+      args:
+          TETHYS_EXTRAS: rabbit,mongo
+    working_dir: /home/tethys/
+    volumes:
+      - .:/home/tethys/
+    environment:
+      - PYTHONPATH=/home/tethys/:${PYTHONPATH}
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - TRANSPORT_URI=amqp://rabbitmq/
+      - MAX_PROCESSES_COUNT=2
+    command: apps Worker start -s "worker_3" -c "/home/tethys/l2_configs.py" -v
+    depends_on:
+      - worker_2
+
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - 5672:5672
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: l2_repo
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+
+  ftp_host:
+    image: akogut/docker-pyftpdlib
+    volumes:
+      - ".:/home/tethys/"
+    command: python -m pyftpdlib --directory=/home/tethys/ --port 21
+
+  http_host:
+    image: python:3.7-stretch
+    volumes:
+      - ".:/home/l2/"
+    working_dir: /home/l2/
+    command: python3 -m http.server

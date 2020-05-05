@@ -1,0 +1,9 @@
+requests~=2.22
+serobj~=0.0
+uritools~=2.2
+persist-queue~=0.5
+click==7.0
+pid~=2.2
+jsonpath-ng~=1.4
+pyyaml~=5.1
+python-daemon~=2.2

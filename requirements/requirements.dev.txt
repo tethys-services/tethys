@@ -1,0 +1,17 @@
+tox~=3.14
+pre-commit~=1.20
+
+flake8~=3.7
+flake8-black~=0.1
+black==19.10b0
+bandit~=1.6
+pytest~=5.0
+pytest-cov~=2.8
+pytest-env~=0.6
+pytest-xdist~=1.30
+
+sphinx~=2.2
+sphinx~=2.2
+sphinx-autoapi~=1.2
+sphinx-rtd-theme~=0.4
+sphinxcontrib.images~=0.9
